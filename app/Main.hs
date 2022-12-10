@@ -53,13 +53,17 @@ parseConfig = Config
                )
   where
     resolutions :: Bimap.Bimap ResolutionStrategy String
-    resolutions = Bimap.fromList [(AsGiven, "as-given"), (Latest, "latest")]
+    resolutions = Bimap.fromList [(AsGiven, "as-given"), (Latest, "latest"), (JenkinsVersion(""), "jenkins")]
 
     resolutionReader :: Opt.ReadM ResolutionStrategy
-    resolutionReader = Opt.eitherReader $ \s -> case Bimap.lookupR s resolutions of
-      Nothing -> Left $ "Invalid dependency resolution, needs to be one of "
-                     <> show (Bimap.keysR resolutions)
-      Just v -> Right v
+    resolutionReader = let
+        strat = \s -> (Text.unpack (head (Text.splitOn ":" (Text.pack s))))
+        version = \s -> (Text.unpack(last (Text.splitOn ":" (Text.pack s))))
+      in Opt.eitherReader $ \s -> case Bimap.lookupR (strat s) resolutions of
+        Nothing -> Left $ "Invalid dependency resolution, needs to be one of "
+                       <> show (Bimap.keysR resolutions)
+        Just (JenkinsVersion("")) -> Right (JenkinsVersion(version s))
+        Just v -> Right v
 
     requestedPluginReader :: Opt.ReadM RequestedPlugin
     requestedPluginReader = Opt.maybeReader $ \p -> Just $! case break (== ':') p of

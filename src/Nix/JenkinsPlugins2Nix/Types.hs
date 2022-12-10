@@ -27,6 +27,7 @@ data ResolutionStrategy =
   AsGiven
   -- | Always pick latest version of the dependency we're told about.
   | Latest
+  | JenkinsVersion(String)
   deriving (Show, Eq, Ord)
 
 -- | Program configuration
